@@ -48,6 +48,8 @@ def on_log(client, userdata, level, buf):
     print(f"MQTT лог: {buf}")
 
 # Инициализация MQTT клиента
+print("Запуск программы...")
+print("Подключение к брокеру...")
 client = mqtt.Client(protocol=mqtt.MQTTv311)
 client.username_pw_set("", "")
 client.on_message = on_message
