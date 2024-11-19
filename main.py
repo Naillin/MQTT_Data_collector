@@ -37,12 +37,13 @@ def on_message(client, userdata, message):
 # Инициализация MQTT клиента
 client = mqtt.Client(protocol=mqtt.MQTTv311)
 client.on_message = on_message
-client.connect("localhost", 3121)
+client.connect("192.168.1.10", 3121)
 
 # Обновление подписок
 def update_subscriptions():
     # Открытие соединения и курсора для чтения
     with sqlite3.connect('mqtt_data.db') as conn:
+        conn.execute('PRAGMA journal_mode=WAL')
         cursor = conn.cursor()
         client.unsubscribe("#")  # Отписаться от всех топиков
         topics = get_topics()  # Получить список топиков
