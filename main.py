@@ -16,6 +16,7 @@ def on_message(client, userdata, message):
     topic_path = message.topic
     value = message.payload.decode()
     timestamp = int(time.time())
+    print(f"Полученно сообщение: Топик {topic_path}, Значение {value}, Время {timestamp}")
 
     # Открытие соединения для записи данных в базу
     with sqlite3.connect('mqtt_data.db') as conn:
@@ -34,11 +35,26 @@ def on_message(client, userdata, message):
             conn.commit()
             print(f"Сохранены данные: Топик {topic_path}, Значение {value}, Время {timestamp}")
 
+def on_connect(client, userdata, flags, rc):
+    if rc == 0:
+        print("Успешное подключение к брокеру")
+    else:
+        print(f"Ошибка подключения: {rc}")
+
+def on_subscribe(client, userdata, mid, granted_qos):
+    print(f"Подписка выполнена: mid={mid}, QoS={granted_qos}")
+
+def on_log(client, userdata, level, buf):
+    print(f"MQTT лог: {buf}")
+
 # Инициализация MQTT клиента
 client = mqtt.Client(protocol=mqtt.MQTTv311)
 client.username_pw_set("", "")
 client.on_message = on_message
-client.connect("109.195.147.171", 3121)
+client.on_connect = on_connect
+client.on_subscribe = on_subscribe
+client.on_log = on_log
+client.connect("localhost", 3121)
 
 # Обновление подписок
 def update_subscriptions():
@@ -48,16 +64,18 @@ def update_subscriptions():
         cursor = conn.cursor()
         client.unsubscribe("#")  # Отписаться от всех топиков
         topics = get_topics()  # Получить список топиков
+        print("Топики из базы:", topics)
         for id_topic, path_topic in topics:
             client.subscribe(path_topic)
             print(f"Подписка на {path_topic}")
 
 # Основной цикл
+client.loop_start()
 try:
     while True:
         update_subscriptions()
-        client.loop(timeout=5.0)  # Постоянно проверяем входящие сообщения
-        time.sleep(5)  # Обновлять список топиков каждые 5 секунд
+        time.sleep(5)
 except KeyboardInterrupt:
     print("Отключение клиента")
+    client.loop_stop()
     client.disconnect()
