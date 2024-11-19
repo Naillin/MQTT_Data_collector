@@ -35,7 +35,8 @@ def on_message(client, userdata, message):
             print(f"Сохранены данные: Топик {topic_path}, Значение {value}, Время {timestamp}")
 
 # Инициализация MQTT клиента
-client = mqtt.Client()
+client = mqtt.Client(protocol=mqtt.MQTTv311)
+client.username_pw_set("", "")
 client.on_message = on_message
 client.connect("109.195.147.171", 3121)
 
