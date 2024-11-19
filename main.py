@@ -35,9 +35,9 @@ def on_message(client, userdata, message):
             print(f"Сохранены данные: Топик {topic_path}, Значение {value}, Время {timestamp}")
 
 # Инициализация MQTT клиента
-client = mqtt.Client(protocol=mqtt.MQTTv311)
+client = mqtt.Client()
 client.on_message = on_message
-client.connect("192.168.1.10", 3121)
+client.connect("109.195.147.171", 3121)
 
 # Обновление подписок
 def update_subscriptions():
@@ -55,7 +55,7 @@ def update_subscriptions():
 try:
     while True:
         update_subscriptions()
-        client.loop(timeout=1.0)  # Постоянно проверяем входящие сообщения
+        client.loop(timeout=5.0)  # Постоянно проверяем входящие сообщения
         time.sleep(5)  # Обновлять список топиков каждые 5 секунд
 except KeyboardInterrupt:
     print("Отключение клиента")
