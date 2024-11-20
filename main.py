@@ -49,13 +49,14 @@ def on_log(client, userdata, level, buf):
 
 # Инициализация MQTT клиента
 print("Запуск программы...")
-print("Подключение к брокеру...")
 client = mqtt.Client(protocol=mqtt.MQTTv311)
+print("Задаем логин и пароль...")
 client.username_pw_set("", "")
+client.on_log = on_log
 client.on_message = on_message
 client.on_connect = on_connect
 client.on_subscribe = on_subscribe
-client.on_log = on_log
+print("Подключение к брокеру...")
 client.connect("localhost", 3121)
 
 # Обновление подписок
