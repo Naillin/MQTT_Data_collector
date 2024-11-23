@@ -1,9 +1,18 @@
 import paho.mqtt.client as mqtt
 import sqlite3
 import time
+import logging
+import platform
+from logging.handlers import SysLogHandler
 
 # Чтение списка топиков из базы
 def get_topics():
+    """
+    Retrieves a list of topics from the SQLite database.
+
+    Returns:
+        list: A list of tuples containing the ID and path of each topic.
+    """
     # Открытие соединения и курсора для чтения
     with sqlite3.connect('mqtt_data.db') as conn:
         conn.execute('PRAGMA journal_mode=WAL')
@@ -13,10 +22,23 @@ def get_topics():
 
 # Функция для обработки входящих сообщений
 def on_message(client, userdata, message):
+    """
+    Handles incoming MQTT messages by processing the topic path, payload value, and timestamp.
+
+    Parameters:
+        client (object): The MQTT client instance.
+        userdata (object): The user data associated with the MQTT client.
+        message (object): The incoming MQTT message.
+
+    Returns:
+        None
+    """
     topic_path = message.topic
     value = message.payload.decode()
     timestamp = int(time.time())
-    print(f"Полученно сообщение: Топик {topic_path}, Значение {value}, Время {timestamp}")
+    log_string = f"Полученно сообщение: Топик {topic_path}, Значение {value}, Время {timestamp}"
+    logger.info(log_string)
+    print(log_string)
 
     # Открытие соединения для записи данных в базу
     with sqlite3.connect('mqtt_data.db') as conn:
@@ -33,45 +55,125 @@ def on_message(client, userdata, message):
             cursor.execute("INSERT INTO Data (ID_Topic, Value_Data, Time_Data) VALUES (?, ?, ?)",
                            (id_topic, value, timestamp))
             conn.commit()
-            print(f"Сохранены данные: Топик {topic_path}, Значение {value}, Время {timestamp}")
+            log_string = f"Сохранены данные: Топик {topic_path}, Значение {value}, Время {timestamp}"
+            logger.info(log_string)
+            print(log_string)
 
 def on_connect(client, userdata, flags, rc):
-    print(f"on_connect вызван с кодом: {rc}")
+    """
+    Handles the connection event of the MQTT client.
+
+    Parameters:
+        client (object): The MQTT client instance.
+        userdata (object): The user data associated with the MQTT client.
+        flags (int): The connection flags.
+        rc (int): The connection result code.
+
+    Returns:
+        None
+    """
+    log_string = f"on_connect вызван с кодом: {rc}"
+    logger.info(log_string)
+    print(log_string)
     if rc == 0:
-        print("Успешное подключение к брокеру")
+        log_string = "Успешное подключение к брокеру"
+        logger.info(log_string)
+        print(log_string)
     else:
-        print(f"Ошибка подключения: {rc}")
+        log_string = f"Ошибка подключения: {rc}"
+        logger.info(log_string)
+        print(log_string)
 
 def on_subscribe(client, userdata, mid, granted_qos):
-    print(f"Подписка выполнена: mid={mid}, QoS={granted_qos}")
+    """
+    Handles the subscription event of the MQTT client.
+
+    Parameters:
+        client (object): The MQTT client instance.
+        userdata (object): The user data associated with the MQTT client.
+        mid (int): The message ID.
+        granted_qos (int): The granted Quality of Service.
+
+    Returns:
+        None
+    """
+    log_string = f"Подписка выполнена: mid={mid}, QoS={granted_qos}"
+    logger.info(log_string)
+    print(log_string)
 
 def on_log(client, userdata, level, buf):
-    print(f"MQTT лог: {buf}")
+    """
+    Handles the logging event of the MQTT client.
+
+    Parameters:
+        client (object): The MQTT client instance.
+        userdata (object): The user data associated with the MQTT client.
+        level (int): The logging level.
+        buf (str): The log message buffer.
+
+    Returns:
+        None
+    """
+    log_string = f"MQTT лог: {buf}"
+    logger.info(log_string)
+    print(log_string)
+
+# Настройка логгера
+logger = logging.getLogger('mqtt-data-collector')
+logger.setLevel(logging.INFO)
+
+if platform.system() == 'Windows':
+    # Логгер для Windows (в файл)
+    file_handler = logging.FileHandler('mqtt-data-collector-logs.log')
+    file_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(message)s'))
+    logger.addHandler(file_handler)
+else:
+    # Логгер для Linux (в syslog через systemd)
+    syslog_handler = SysLogHandler(address='/dev/log')
+    syslog_handler.setFormatter(logging.Formatter('%(name)s: %(message)s'))
+    logger.addHandler(syslog_handler)
 
 # Инициализация MQTT клиента
+logger.info("Запуск программы...")
 print("Запуск программы...")
 client = mqtt.Client(client_id="DataCollector", protocol=mqtt.MQTTv311)
+logger.info("Задаем логин и пароль...")
 print("Задаем логин и пароль...")
-client.username_pw_set("Naillin", "12332111")
+client.username_pw_set("", "")
 client.on_log = on_log
 client.on_message = on_message
 client.on_connect = on_connect
 client.on_subscribe = on_subscribe
+logger.info("Подключение к брокеру...")
 print("Подключение к брокеру...")
-client.connect("109.195.147.171", 3121)
+client.connect("127.0.0.1", 3121)
 
 # Обновление подписок
 def update_subscriptions():
+    """
+    Updates the MQTT client subscriptions by unsubscribing from all topics,
+    retrieving the list of topics from the database, and then subscribing to each topic.
+
+    Parameters:
+        None
+
+    Returns:
+        None
+    """
     # Открытие соединения и курсора для чтения
     with sqlite3.connect('mqtt_data.db') as conn:
         conn.execute('PRAGMA journal_mode=WAL')
         cursor = conn.cursor()
         client.unsubscribe("#")  # Отписаться от всех топиков
         topics = get_topics()  # Получить список топиков
-        print("Топики из базы:", topics)
+        log_string = f"Топики из базы:, {topics}"
+        logger.info(log_string)
+        print(log_string)
         for id_topic, path_topic in topics:
             client.subscribe(path_topic)
-            print(f"Подписка на {path_topic}")
+            log_string = f"Подписка на {path_topic}"
+            logger.info(log_string)
+            print(log_string)
 
 # Основной цикл
 client.loop_start()
@@ -80,6 +182,7 @@ try:
         update_subscriptions()
         time.sleep(5)
 except KeyboardInterrupt:
+    logger.info("Отключение клиента")
     print("Отключение клиента")
     client.loop_stop()
     client.disconnect()
