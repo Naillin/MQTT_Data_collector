@@ -36,6 +36,7 @@ def on_message(client, userdata, message):
             print(f"Сохранены данные: Топик {topic_path}, Значение {value}, Время {timestamp}")
 
 def on_connect(client, userdata, flags, rc):
+    print(f"on_connect вызван с кодом: {rc}")
     if rc == 0:
         print("Успешное подключение к брокеру")
     else:
@@ -49,15 +50,15 @@ def on_log(client, userdata, level, buf):
 
 # Инициализация MQTT клиента
 print("Запуск программы...")
-client = mqtt.Client(protocol=mqtt.MQTTv311)
+client = mqtt.Client(client_id="DataCollector", protocol=mqtt.MQTTv311)
 print("Задаем логин и пароль...")
-client.username_pw_set("", "")
+client.username_pw_set("Naillin", "12332111")
 client.on_log = on_log
 client.on_message = on_message
 client.on_connect = on_connect
 client.on_subscribe = on_subscribe
 print("Подключение к брокеру...")
-client.connect("localhost", 3121)
+client.connect("109.195.147.171", 3121)
 
 # Обновление подписок
 def update_subscriptions():

@@ -7,11 +7,11 @@ CREATE TABLE Topics (
     Longitude_Topic REAL
 );
 
--- Создаем таблицу Data
+-- Создаем таблицу Data с каскадным удалением
 CREATE TABLE Data (
     ID_Data INTEGER PRIMARY KEY,
     ID_Topic INTEGER NOT NULL,
     Value_Data TEXT,
     Time_Data DATETIME NOT NULL,
-    FOREIGN KEY (ID_Topic) REFERENCES Topics(ID_Topic)
+    FOREIGN KEY (ID_Topic) REFERENCES Topics(ID_Topic) ON DELETE CASCADE
 );
