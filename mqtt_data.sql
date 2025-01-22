@@ -33,5 +33,5 @@ CREATE TABLE AreaPoints (
     Perimeter_AreaPoint TEXT NOT NULL,
     Included_AreaPoint TEXT NOT NULL,
     Islands_AreaPoint TEXT NOT NULL,
-    FOREIGN KEY (ID_Topic) REFERENCES Topic(ID_Topic) ON DELETE CASCADE
+    FOREIGN KEY (ID_Topic) REFERENCES Topics(ID_Topic) ON DELETE CASCADE
 );
