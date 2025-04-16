@@ -34,11 +34,21 @@ def on_message(client, userdata, message):
         None
     """
     topic_path = message.topic
-    value = message.payload.decode()
+    raw_value = message.payload.decode()
     timestamp = int(time.time())
-    log_string = f"Полученно сообщение: Топик {topic_path}, Значение {value}, Время {timestamp}"
+    log_string = f"Полученно сообщение: Топик {topic_path}, Значение {raw_value}, Время {timestamp}"
     logger.info(log_string)
     print(log_string)
+
+    value = 0.0
+    # Проверяем, является ли значение числом (целым или дробным)
+    try:
+        value = float(raw_value)  # Пробуем преобразовать в число
+    except ValueError:
+        error_msg = f"Ошибка: Некорректное числовое значение '{raw_value}' в топике {topic_path}"
+        logger.warning(error_msg)
+        print(error_msg)
+        return  # Прекращаем выполнение функции
 
     # Открытие соединения для записи данных в базу
     with sqlite3.connect('mqtt_data.db') as conn:
