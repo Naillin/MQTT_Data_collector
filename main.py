@@ -56,16 +56,17 @@ def on_message(client, userdata, message):
         cursor = conn.cursor()
 
         # Найти ID_Topic по Path_Topic
-        cursor.execute("SELECT ID_Topic FROM Topics WHERE Path_Topic = ?", (topic_path,))
+        cursor.execute("SELECT ID_Topic, AltitudeSensor_Topic FROM Topics WHERE Path_Topic = ?", (topic_path,))
         topic_row = cursor.fetchone()
 
         if topic_row:
             id_topic = topic_row[0]
+            level = topic_row[1] - value
             # Сохранить данные в таблицу Data
             cursor.execute("INSERT INTO Data (ID_Topic, Value_Data, Time_Data) VALUES (?, ?, ?)",
-                           (id_topic, value, timestamp))
+                           (id_topic, level, timestamp))
             conn.commit()
-            log_string = f"Сохранены данные: Топик {topic_path}, Значение {value}, Время {timestamp}"
+            log_string = f"Сохранены данные: Топик {topic_path}, Значение {level}, Время {timestamp}"
             logger.info(log_string)
             print(log_string)
 

@@ -13,6 +13,7 @@ CREATE TABLE Topics (
     Latitude_Topic REAL NOT NULL,
     Longitude_Topic REAL NOT NULL,
 	Altitude_Topic REAL NOT NULL,
+	AltitudeSensor_Topic REAL NOT NULL,
 	CheckTime_Topic DATETIME
 );
 
